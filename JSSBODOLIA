@@ -1,0 +1,45 @@
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const app = express();
+
+mongoose.connect('mongodb://localhost/socialmedia', { useNewUrlParser: true });
+
+const UserSchema = new mongoose.Schema({
+  username: String,
+  password: String // In production, hash this!
+});
+
+const PostSchema = new mongoose.Schema({
+  author: String,
+  content: String,
+  timestamp: { type: Date, default: Date.now }
+});
+
+const User = mongoose.model('User', UserSchema);
+const Post = mongoose.model('Post', PostSchema);
+
+app.use(cors());
+app.use(express.json());
+
+// Register
+app.post('/register', async (req, res) => {
+  const user = new User(req.body);
+  await user.save();
+  res.send(user);
+});
+
+// Create Post
+app.post('/posts', async (req, res) => {
+  const post = new Post(req.body);
+  await post.save();
+  res.send(post);
+});
+
+// Get all posts
+app.get('/posts', async (req, res) => {
+  const posts = await Post.find().sort({ timestamp: -1 });
+  res.send(posts);
+});
+
+app.listen(5000, () => console.log('Server running on http://localhost:5000'));
